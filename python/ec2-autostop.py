@@ -41,7 +41,6 @@ def lambda_handler(event, context):
                 continue
 
             tag_action = 'stop' # Default action
-            uptime = datetime.now()
 
             for tag in instance.tags:
 
@@ -51,7 +50,7 @@ def lambda_handler(event, context):
                     continue
 
                 if tag['Key'].lower() == 'auto-stop-action' :
-                    action = tag['Value'].lower()
+                    tag_action = tag['Value'].lower()
 
                 if tag_action == TAG_STOP :
                     print(f'Stopping instance {instance.id}')

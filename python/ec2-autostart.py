@@ -31,7 +31,7 @@ def lambda_handler(event, context):
 
         stopped_filter = {'Name':'instance-state-name', 'Values':['stopped']}
         instances = ec2_resource.instances.filter(Filters=[stopped_filter])
-        print(instances)
+
         if not instances :
             continue
 
@@ -39,9 +39,6 @@ def lambda_handler(event, context):
 
             if instance.tags == None:
                 continue
-
-            tag_action = 'start' # Default action
-            uptime = datetime.now()
 
             for tag in instance.tags:
 
