@@ -44,7 +44,6 @@ def lambda_handler(event, context):
                     instance.terminate()
 
 def check_duration(duration_string, launch_time):
-    
     # Extract duration to wait
     try:
         if duration_string[-1] == 'm':
