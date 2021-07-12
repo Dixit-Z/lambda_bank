@@ -22,6 +22,8 @@ CHECK_FREQUENCY = 5
 def lambda_handler(event, context):
     # Set to empty to check all regions
     ec2_regions = ['eu-west-1']
+    now = datetime.now()
+    currentTime = '{:02d}:{:02d}'.format(now.hour, now.minute)
 
     if not ec2_regions:
         ec2_regions = [r['RegionName'] for r in boto3.client('ec2').describe_regions()['Regions']]
@@ -36,7 +38,6 @@ def lambda_handler(event, context):
         for instance in instances:
 
             if instance.tags == None:
-                print(f'Nothing to do for {instance.id}')
                 continue
 
             tag_action = 'stop' # Default action
@@ -45,7 +46,7 @@ def lambda_handler(event, context):
             for tag in instance.tags:
 
               if tag['Key'].lower().startswith(TAG_SCHEDULE) :
-                diff = timeDifference(value[0], datetime.now)
+                diff = timeDifference(tag['Value'], currentTime)
                 if diff < 0 or diff > CHECK_FREQUENCY:
                     continue
 
@@ -62,4 +63,4 @@ def lambda_handler(event, context):
 
 def timeDifference(then, now):
     diff = datetime.strptime(now,FMT) - datetime.strptime(then,FMT)
-    return diff
+    return (diff.seconds//60)%60
