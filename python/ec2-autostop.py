@@ -10,6 +10,7 @@ Add an 'Auto-stop-action' to change the action to execute on the EC2 :
 '''
 
 from datetime import datetime
+import dateutil.tz
 import boto3
 
 FMT='%H:%M'
@@ -22,8 +23,8 @@ CHECK_FREQUENCY = 5
 def lambda_handler(event, context):
     # Set to empty to check all regions
     ec2_regions = ['eu-west-1']
-    now = datetime.now()
-    currentTime = '{:02d}:{:02d}'.format(now.hour, now.minute)
+    now = datetime.now(tz=dateutil.tz.gettz('Europe/Paris'))
+    current_time = '{:02d}:{:02d}'.format(now.hour, now.minute)
 
     if not ec2_regions:
         ec2_regions = [r['RegionName'] for r in boto3.client('ec2').describe_regions()['Regions']]
@@ -37,29 +38,32 @@ def lambda_handler(event, context):
 
         for instance in instances:
 
-            if instance.tags == None:
+            if instance.tags is None:
                 continue
 
             tag_action = 'stop' # Default action
 
             for tag in instance.tags:
 
-              if tag['Key'].lower().startswith(TAG_SCHEDULE) :
-                diff = timeDifference(tag['Value'], currentTime)
-                if diff < 0 or diff > CHECK_FREQUENCY:
-                    continue
+                if tag['Key'].lower().startswith(TAG_SCHEDULE) :
+                    diff = timeDifference(tag['Value'], current_time)
+                    if diff < 0 or diff > CHECK_FREQUENCY:
+                        continue
 
-                if tag['Key'].lower() == 'auto-stop-action' :
-                    tag_action = tag['Value'].lower()
+                    if tag['Key'].lower() == 'auto-stop-action' :
+                        tag_action = tag['Value'].lower()
 
-                if tag_action == TAG_STOP :
-                    print(f'Stopping instance {instance.id}')
-                    instance.stop()
+                    if tag_action == TAG_STOP :
+                        print(f'Stopping instance {instance.id}')
+                        instance.stop()
 
-                elif tag_action == TAG_TERMINATE :
-                    print(f'Terminating instance {instance.id}')
-                    instance.terminate()
+                    elif tag_action == TAG_TERMINATE :
+                        print(f'Terminating instance {instance.id}')
+                        instance.terminate()
 
 def timeDifference(then, now):
     diff = datetime.strptime(now,FMT) - datetime.strptime(then,FMT)
-    return (diff.seconds//60)%60
+    if diff.total_seconds() < 0 :
+        return -1
+
+    return (diff.total_seconds()//60)%60
