@@ -76,11 +76,11 @@ def isScheduleOn(tag, current_day) :
             if split_value.find('-') == -1 :
                 if WEEKDAYS[split_value] and WEEKDAYS[split_value] == current_day :
                     return True
-            else :
-                range = split_value.split('-')
-                d1 = range[0]
-                d2 = range[1]
-                if d1 > d2 :
-                    return current_day >= WEEKDAYS[d1] or current_day <= WEEKDAYS[d2]
-                else :
-                    return WEEKDAYS[d1] <= current_day <= WEEKDAYS[d2]
+            elif isInCircularRange(split_value.split('-')[0], split_value.split('-')[1], current_day) :
+                return True
+
+def isInCircularRange(start_range, end_range, value) :
+    if start_range > end_range :
+        return value >= WEEKDAYS[start_range] or value <= WEEKDAYS[end_range]
+    else :
+        return WEEKDAYS[start_range] <= value <= WEEKDAYS[end_range]
